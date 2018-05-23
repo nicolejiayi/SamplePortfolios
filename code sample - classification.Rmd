@@ -1,0 +1,140 @@
+---
+title: "classification models"
+author: "Nicole Li"
+date: "4/12/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+# The dataset used in this code sample is pp2.2, which is a dataset that contains around 2 million rows and 16 variables, inclusing 8 numerical variables and 8 categorical variables. The response of the data is a factor variable with 2 levels "0" and "1", as a result, classification models are used. In the following code, the name of the variables are replaced with new names because of confidentiality. 
+
+# Exploration data analysis is conducted before this step, and it is found that the data is highly imbalanced, with some missing values in both numerical and categorical variables, so these issues need to be taken care of.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(DMwR)
+require(caret)
+require(ROSE)
+require(rpart.plot)
+require(ROCR)
+```
+
+# Pre-processing, cleaning the data
+
+# remove variables that have more than 50% missing values
+```{r}
+# check for the amount of missimng values in each column
+pMiss <- function(x){sum(is.na(x))/length(x)*100}
+apply(pp2.2,2,pMiss)
+# manually remove the following 2 variables that have more than 50% NAs since 2 is relatively small and easy to work with
+pp2.2$categorical1=NULL
+pp2.2$categorical2=NULL
+```
+
+# replace missimng values in numerical variables using package MICE
+```{r}
+# save the numerical columns into a new dataframe for transformation
+nums <- unlist(lapply(pp2.2, is.numeric))  
+pp2.2Num=pp2.2[,nums]
+tempData=mice(pp2.2Num, method = 'norm',seed=123)
+pp2.2Num=complete(tempData,1)
+# replace the numerical variables in the dataset with the processed data 
+pp2.2[,nums]=pp2.2Num
+```
+
+# replace all the missing values in categorical variables with "unknown"
+```{R}
+pp2.2[is.na(pp2.2)]="unknown"
+```
+
+# Modeling process
+
+# Splitting test set and training set
+```{r}
+set.seed(123)
+splitIndex=createDataPartition(pp2.2$response,p=0.7,list=F,times = 1)
+trainV2=pp2.2[splitIndex,]
+testV2=pp2.2[-splitIndex,]
+```
+# using SMOTE sampling to balance the highly imbalanced data
+```{r}
+set.seed(123)
+# convert character variables to factor variables
+trainV2[sapply(trainV2,is.character)]=lapply(trainV2[sapply(trainV2,is.character)],as.factor)
+# smote sampling to balance the positive response and negative response
+train2.0 <- SMOTE(Conversion ~ ., as.data.frame(trainV2), perc.over = 300, perc.under=400)
+```
+# Define train control to be used in training classifiers
+```{r}
+ctrl <- trainControl(method = "cv", number = 10, allowParallel=T)
+```
+# Logistic regression 
+```{r}
+glmmodel=train(response~., data=train2.0,method="glm",trControl=ctrl)
+```
+```{r}
+# prediction
+predGLM=predict(glmmodel,newdata=testV2)
+# ROC and confusion matrix are displayed for evaluation and comparison
+roc.curve(testV2$response,predGLM,plotit=F)
+caret::confusionMatrix(predGLM,testV2$response,positive="1")
+```
+# Decision tree 
+```{r}
+treemodel <- train(response ~ ., data = train2.0, method = "rpart", trControl = ctrl) 
+```
+```{r}
+# prediction
+predTREE=predict(treemodel,newdata=testV2)
+# ROC and confusion matrix are displayed for evaluation and comparison
+roc.curve(testV2$response, predTREE, plotit = F)
+caret::confusionMatrix(predTREE,testV2$response,positive="1")
+```
+```{r}
+# visualize the decision tree 
+rpart.plot(treemodel$finalModel)
+```
+# Random Forest
+```{r}
+set.seed(123)
+# In order to improve the speed of training random forest classifier, matrix interface is used in the code
+# This matrix interface improves training efficiency by around 2x
+rfmodel <- train(y=train2.0[,1],x=train2.0[,2:14], method = "rf",
+                 trControl = ctrl,prox=TRUE,allowParallel=TRUE,ntree=500,tuneGrid=data.frame(mtry=4))
+#prediction
+predRF=predict(rfmodel,newdata=testV2)
+# ROC and confusion matrix are displayed for evaluation and comparison
+roc.curve(testV2$response,predRF,plotit=F)
+caret::confusionMatrix(predRF,testV2$response,positive="1")
+```
+```{r}
+#visualize the variable importance
+rfimp=varImp(rfmodel,scale=F)
+plot(rfimp)
+```
+
+# Model comparison
+
+# ROC plot - compare model performance
+```{R}
+par(pty="s")
+# logistic regression ROC
+plot(roc(testV2$response,as.numeric(predGLM)),col="skyblue1", main="Model comparison - ROC", xlab="False positive rate",ylab="True positive rate",legacy.axes=T)
+# decision tree ROC
+lines((roc(testV2$response,as.numeric(predTREE))),col="yellow")
+# random forest ROC
+lines((roc(testV2$response,as.numeric(predRF))),col="forestgreen")
+# baseline for comparison (random guess)
+lines(x=c(0, 1), y=c(0, 1), type="l", col="gray")
+```
+
+# Lift chart - Cumulative gain of the optimal model found (compare the model effectiveness) This information is important because it's a marketing problem and effectiveness of the model is of high value. 
+# As an example, here I used decision tree model.
+```{r}
+testing_data=testV2
+testing_data$predictionsOutput = predTREE
+predictionTreeV2=prediction(c(testing_data$predictionsOutput),testing_data$response)
+gainTREE <- performance(predictionTreeV2, "tpr", "rpp")
+plot(gainTreeV2, main = "Decision Tree - Cumulative Gain",col="orange", lwd=2, xlab="% of observations", ylab= "% positive outcome (conversion)")
+abline(a=0,b=1,col="gray")
+```
