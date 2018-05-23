@@ -20,7 +20,7 @@ require(ROCR)
 
 ## Pre-processing, cleaning the data
 
- remove variables that have more than 50% missing values
+ Remove variables that have more than 50% missing values
 ```{r}
 # check for the amount of missimng values in each column
 pMiss <- function(x){sum(is.na(x))/length(x)*100}
@@ -30,7 +30,7 @@ pp2.2$categorical1=NULL
 pp2.2$categorical2=NULL
 ```
 
- replace missimng values in numerical variables using package MICE
+ Replace missimng values in numerical variables using package MICE
 ```{r}
 # save the numerical columns into a new dataframe for transformation
 nums <- unlist(lapply(pp2.2, is.numeric))  
@@ -41,7 +41,7 @@ pp2.2Num=complete(tempData,1)
 pp2.2[,nums]=pp2.2Num
 ```
 
- replace all the missing values in categorical variables with "unknown"
+ Replace all the missing values in categorical variables with "unknown"
 ```{R}
 pp2.2[is.na(pp2.2)]="unknown"
 ```
@@ -55,7 +55,7 @@ splitIndex=createDataPartition(pp2.2$response,p=0.7,list=F,times = 1)
 trainV2=pp2.2[splitIndex,]
 testV2=pp2.2[-splitIndex,]
 ```
- using SMOTE sampling to balance the highly imbalanced data
+ Using SMOTE sampling to balance the highly imbalanced data
 ```{r}
 set.seed(123)
 # convert character variables to factor variables
