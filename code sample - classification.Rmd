@@ -5,12 +5,18 @@ date: "4/12/2018"
 output:
   html_document: default
 ---
+<<<<<<< HEAD
  The dataset used in this code sample is called "pp2.2", which is a dataset that contains around 2 million rows and 16 variables inclusing 8 numerical variables and 8 categorical variables. 
  The response of the data is a factor variable with 2 levels - "0" and "1" - thus classification models are used. 
  In the following code, the names of the variables are replaced with obfuscated names because of confidentiality. 
 
  Exploration data analysis has been conducted before this step, and the data is highly imbalanced with some missing values in both numerical and categorical variables. 
  Prior to this step, these issues need to be taken care of.
+=======
+ The dataset used in this code sample is pp2.2, which is a dataset that contains around 2 million rows and 16 variables, inclusing 8 numerical variables and 8 categorical variables. The response of the data is a factor variable with 2 levels "0" and "1", as a result, classification models are used. In the following code, the name of the variables are replaced with new names because of confidentiality. 
+
+ Exploration data analysis is conducted before this step, and it is found that the data is highly imbalanced, with some missing values in both numerical and categorical variables, so these issues need to be taken care of.
+>>>>>>> c6ed1a95b0331743dd6740b03586ac88761634ea
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
