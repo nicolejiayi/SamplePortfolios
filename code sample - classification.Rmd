@@ -6,9 +6,9 @@ output:
   pdf_document: default
   html_document: default
 ---
-# The dataset used in this code sample is pp2.2, which is a dataset that contains around 2 million rows and 16 variables, inclusing 8 numerical variables and 8 categorical variables. The response of the data is a factor variable with 2 levels "0" and "1", as a result, classification models are used. In the following code, the name of the variables are replaced with new names because of confidentiality. 
+ The dataset used in this code sample is pp2.2, which is a dataset that contains around 2 million rows and 16 variables, inclusing 8 numerical variables and 8 categorical variables. The response of the data is a factor variable with 2 levels "0" and "1", as a result, classification models are used. In the following code, the name of the variables are replaced with new names because of confidentiality. 
 
-# Exploration data analysis is conducted before this step, and it is found that the data is highly imbalanced, with some missing values in both numerical and categorical variables, so these issues need to be taken care of.
+ Exploration data analysis is conducted before this step, and it is found that the data is highly imbalanced, with some missing values in both numerical and categorical variables, so these issues need to be taken care of.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -19,9 +19,9 @@ require(rpart.plot)
 require(ROCR)
 ```
 
-# Pre-processing, cleaning the data
+ Pre-processing, cleaning the data
 
-# remove variables that have more than 50% missing values
+ remove variables that have more than 50% missing values
 ```{r}
 # check for the amount of missimng values in each column
 pMiss <- function(x){sum(is.na(x))/length(x)*100}
@@ -31,7 +31,7 @@ pp2.2$categorical1=NULL
 pp2.2$categorical2=NULL
 ```
 
-# replace missimng values in numerical variables using package MICE
+ replace missimng values in numerical variables using package MICE
 ```{r}
 # save the numerical columns into a new dataframe for transformation
 nums <- unlist(lapply(pp2.2, is.numeric))  
@@ -42,21 +42,21 @@ pp2.2Num=complete(tempData,1)
 pp2.2[,nums]=pp2.2Num
 ```
 
-# replace all the missing values in categorical variables with "unknown"
+ replace all the missing values in categorical variables with "unknown"
 ```{R}
 pp2.2[is.na(pp2.2)]="unknown"
 ```
 
-# Modeling process
+ Modeling process
 
-# Splitting test set and training set
+ Splitting test set and training set
 ```{r}
 set.seed(123)
 splitIndex=createDataPartition(pp2.2$response,p=0.7,list=F,times = 1)
 trainV2=pp2.2[splitIndex,]
 testV2=pp2.2[-splitIndex,]
 ```
-# using SMOTE sampling to balance the highly imbalanced data
+ using SMOTE sampling to balance the highly imbalanced data
 ```{r}
 set.seed(123)
 # convert character variables to factor variables
@@ -64,11 +64,11 @@ trainV2[sapply(trainV2,is.character)]=lapply(trainV2[sapply(trainV2,is.character
 # smote sampling to balance the positive response and negative response
 train2.0 <- SMOTE(Conversion ~ ., as.data.frame(trainV2), perc.over = 300, perc.under=400)
 ```
-# Define train control to be used in training classifiers
+ Define train control to be used in training classifiers
 ```{r}
 ctrl <- trainControl(method = "cv", number = 10, allowParallel=T)
 ```
-# Logistic regression 
+ Logistic regression 
 ```{r}
 glmmodel=train(response~., data=train2.0,method="glm",trControl=ctrl)
 ```
@@ -79,7 +79,7 @@ predGLM=predict(glmmodel,newdata=testV2)
 roc.curve(testV2$response,predGLM,plotit=F)
 caret::confusionMatrix(predGLM,testV2$response,positive="1")
 ```
-# Decision tree 
+ Decision tree 
 ```{r}
 treemodel <- train(response ~ ., data = train2.0, method = "rpart", trControl = ctrl) 
 ```
@@ -94,7 +94,7 @@ caret::confusionMatrix(predTREE,testV2$response,positive="1")
 # visualize the decision tree 
 rpart.plot(treemodel$finalModel)
 ```
-# Random Forest
+ Random Forest
 ```{r}
 set.seed(123)
 # In order to improve the speed of training random forest classifier, matrix interface is used in the code
@@ -113,9 +113,9 @@ rfimp=varImp(rfmodel,scale=F)
 plot(rfimp)
 ```
 
-# Model comparison
+ Model comparison
 
-# ROC plot - compare model performance
+ ROC plot - compare model performance
 ```{R}
 par(pty="s")
 # logistic regression ROC
@@ -128,8 +128,8 @@ lines((roc(testV2$response,as.numeric(predRF))),col="forestgreen")
 lines(x=c(0, 1), y=c(0, 1), type="l", col="gray")
 ```
 
-# Lift chart - Cumulative gain of the optimal model found (compare the model effectiveness) This information is important because it's a marketing problem and effectiveness of the model is of high value. 
-# As an example, here I used decision tree model.
+ Lift chart - Cumulative gain of the optimal model found (compare the model effectiveness) This information is important because it's a marketing problem and effectiveness of the model is of high value. 
+ As an example, here I used decision tree model.
 ```{r}
 testing_data=testV2
 testing_data$predictionsOutput = predTREE
