@@ -19,7 +19,7 @@ require(rpart.plot)
 require(ROCR)
 ```
 
- Pre-processing, cleaning the data
+## Pre-processing, cleaning the data
 
  remove variables that have more than 50% missing values
 ```{r}
@@ -47,7 +47,7 @@ pp2.2[,nums]=pp2.2Num
 pp2.2[is.na(pp2.2)]="unknown"
 ```
 
- Modeling process
+## Modeling process
 
  Splitting test set and training set
 ```{r}
@@ -113,7 +113,7 @@ rfimp=varImp(rfmodel,scale=F)
 plot(rfimp)
 ```
 
- Model comparison
+## Model comparison
 
  ROC plot - compare model performance
 ```{R}
