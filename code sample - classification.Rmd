@@ -3,7 +3,6 @@ title: "classification models"
 author: "Nicole Li"
 date: "4/12/2018"
 output:
-  pdf_document: default
   html_document: default
 ---
  The dataset used in this code sample is pp2.2, which is a dataset that contains around 2 million rows and 16 variables, inclusing 8 numerical variables and 8 categorical variables. The response of the data is a factor variable with 2 levels "0" and "1", as a result, classification models are used. In the following code, the name of the variables are replaced with new names because of confidentiality. 
